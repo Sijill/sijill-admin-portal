@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+*{
+  font-family: "Nunito", sans-serif;
+}
+
+:root {
+  --main-color: #c084fc;
+  --border-color: #edededee;
+  --firstGrad: linear-gradient(135deg, #4ade80 0%, #22d3ee 100%);
+  --secondGrad: linear-gradient(135deg, #60a5fa 0%, #93c5fd 100%);
+  --thirdGrad: linear-gradient(135deg, #f472b6 0%, #f9a8d4 100%);
+  --fourthGrad: linear-gradient(135deg, #c084fc 0%, #ddd6fe 100%);
+  --main-shadow: 0px 0px 16px 0px #0000001a;
+  --secondary-shadow: 0px 0px 8px 0px #00000014;
+  --backColor : #f7f7f7;
+}
+
+html[data-theme="dark"] {
+  --backColor : #000;
+  --border-color: #353535ee;
+}
+
+/* rowTwo */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-40px);
+    -webkit-transform: translateY(-40px);
+    -moz-transform: translateY(-40px);
+    -ms-transform: translateY(-40px);
+    -o-transform: translateY(-40px);
+  }
+}
+
+.float-animation {
+  animation: float 2.5s ease-in-out infinite;
+  -webkit-animation: float 2.5s ease-in-out infinite;
+}
