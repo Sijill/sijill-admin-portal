@@ -11,7 +11,7 @@ import {
 } from "@mui/material";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import Header from "../../Conponents/Header";
+import Header from "../../Components/Header";
 
 export default function NewUser() {
   const {
@@ -23,21 +23,16 @@ export default function NewUser() {
   const onSubmit = () => {
     handleClick();
   };
-
-  // select box value
   const [role, setRole] = useState("");
 
   const handleChange = (event) => {
     setRole(event.target.value);
   };
-  //   user and email patterns
   const regEmail =
     /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 
   const phoneRegExp =
     /^((\+[1-9]{1,4}[ -]?)|(\([0-9]{2,3}\)[ -]?)|([0-9]{2,4})[ -]?)*?[0-9]{3,4}[ -]?[0-9]{3,4}$/;
-
-  //snackbar
   const [open, setOpen] = useState(false);
   const handleClose = (event, reason) => {
     if (reason === "clickaway") {
@@ -146,7 +141,7 @@ export default function NewUser() {
         </Box>
       </Box>
 
-      {/* snackbar  */}
+      
       <Snackbar
         anchorOrigin={{ vertical: "top", horizontal: "right" }}
         open={open}

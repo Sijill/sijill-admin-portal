@@ -21,7 +21,6 @@ const DrawerHeader = styled("div")(({ theme }) => ({
   alignItems: "center",
   justifyContent: "flex-end",
   padding: theme.spacing(0, 1),
-  // necessary for content to be below app bar
   ...theme.mixins.toolbar,
 }));
 
@@ -81,8 +80,6 @@ export default function SideBar({ open, handleDrawerClose }) {
   const theme = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
-
-  // data list
   const data = [
     {
       text: "Dashboard",
@@ -105,13 +102,7 @@ export default function SideBar({ open, handleDrawerClose }) {
       path: "/audit-logs",
     },
   ];
-  // user data list
   const user = [
-    {
-      text: "Create User",
-      icon: "bi bi-person-plus",
-      path: "/newuser",
-    },
     {
       text: "Calendar",
       icon: "bi bi-calendar-date",

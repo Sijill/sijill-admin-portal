@@ -21,7 +21,7 @@ html[data-theme="dark"] {
   --border-color: #353535ee;
 }
 
-/* rowTwo */
+
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;

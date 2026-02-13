@@ -1,10 +1,11 @@
 import React from 'react';
-import { Box, Paper, Typography, Chip, Button, Avatar, Stack } from '@mui/material';
+import { Box, Paper, Typography, Button, Avatar, Stack } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import FlagIcon from '@mui/icons-material/Flag';
+import EmailIcon from '@mui/icons-material/Email';
 
-export default function Queueitem({ id, name, role, date, icon, iconBg }) {
+export default function Queueitem({ id, email, role, date, icon, iconBg }) {
   const navigate = useNavigate();
 
   const getRoleColors = (role) => {
@@ -13,8 +14,10 @@ export default function Queueitem({ id, name, role, date, icon, iconBg }) {
         return { bg: '#dbeafe', color: '#1e40af', border: '#93c5fd' };
       case 'healthcare provider': 
         return { bg: '#f3e8ff', color: '#6b21a8', border: '#d8b4fe' };
-      case 'laboratory technician': 
+      case 'laboratory': 
         return { bg: '#fff7ed', color: '#9a3412', border: '#fed7aa' };
+      case 'imaging center':
+        return { bg: '#dcfce7', color: '#166534', border: '#bbf7d0' };
       default: 
         return { bg: '#f3f4f6', color: '#374151', border: '#d1d5db' };
     }
@@ -33,11 +36,14 @@ export default function Queueitem({ id, name, role, date, icon, iconBg }) {
         alignItems: 'center',
         justifyContent: 'space-between',
         transition: '0.2s',
-        '&:hover': { boxShadow: '0px 8px 24px rgba(0,0,0,0.06)' }
+        '&:hover': { 
+          boxShadow: '0px 8px 24px rgba(0,0,0,0.06)',
+          borderColor: '#d0d0d0'
+        }
       }}
     >
       <Box sx={{ display: 'flex', gap: 2.5, alignItems: 'center' }}>
-        {/* User Avatar */}
+        
         <Avatar sx={{ bgcolor: iconBg, width: 60, height: 60 }}>
           <i 
             className={icon} 
@@ -49,44 +55,33 @@ export default function Queueitem({ id, name, role, date, icon, iconBg }) {
         </Avatar>
 
         <Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 0.5 }}>
-            <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '1.2rem' }}>
-              {name}
+          
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
+            <EmailIcon sx={{ fontSize: 20, color: '#546e7a' }} />
+            <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '1.1rem' }}>
+              {email}
             </Typography>
-            <Chip
-              label="Pending Verification"
-              size="small"
-              sx={{
-                fontWeight: 700,
-                borderRadius: '8px',
-                fontSize: '0.75rem',
-                bgcolor: '#fff3e0',
-                color: '#e65100',
-                border: '1px solid',
-                borderColor: '#ffcc80'
-              }}
-            />
           </Box>
 
-          {/* Details Section */}
+          
           <Stack spacing={0.4}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <FlagIcon sx={{ fontSize: 18 }} />
-              <Typography variant="body2" sx={{ fontWeight: 800 }}>
-                Role: <span style={{ fontWeight: 500 }}>{role}</span>
+              <FlagIcon sx={{ fontSize: 18, color: '#546e7a' }} />
+              <Typography variant="body2" sx={{ fontWeight: 800, color: '#546e7a' }}>
+                Role: <span style={{ fontWeight: 500, color: roleStyle.color }}>{role}</span>
               </Typography>
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <CalendarTodayIcon sx={{ fontSize: 18 }} />
-              <Typography variant="body2" sx={{ fontWeight: 800 }}>
-                Submitted on: <span style={{ fontWeight: 500 }}>{date}</span>
+              <CalendarTodayIcon sx={{ fontSize: 18, color: '#546e7a' }} />
+              <Typography variant="body2" sx={{ fontWeight: 800, color: '#546e7a' }}>
+                Submitted: <span style={{ fontWeight: 500 }}>{date}</span>
               </Typography>
             </Box>
           </Stack>
         </Box>
       </Box>
 
-      {/* Action Button */}
+      
       <Button
         onClick={() => navigate(`/patient-data/${id}`)}
         variant="contained"

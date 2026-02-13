@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Box, Typography, CircularProgress } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
-import Header from "../../Conponents/Header";
+import Header from "../../Components/Header";
 import { columns } from "./LogsData";
 
 export default function AuditLogs() {
@@ -11,7 +11,6 @@ export default function AuditLogs() {
   useEffect(() => {
     const fetchLogs = async () => {
       try {
-        // Replace with your actual API endpoint
         const response = await fetch("YOUR_API_ENDPOINT/logs");
         const data = await response.json();
         setLogs(data);
@@ -24,8 +23,6 @@ export default function AuditLogs() {
 
     fetchLogs();
   }, []);
-
-  // Custom component for when the API returns no data
   const NoLogsMessage = () => (
     <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
       <Typography variant="h6" color="textSecondary">
@@ -43,7 +40,6 @@ export default function AuditLogs() {
           height: "75vh",
           width: "100%",
           mt: 2,
-          // Design alignment styles
           "& .MuiDataGrid-root": { border: "none" },
           "& .MuiDataGrid-columnHeaders": { 
             backgroundColor: "#f8f9fa", 
@@ -64,7 +60,7 @@ export default function AuditLogs() {
           checkboxSelection
           disableRowSelectionOnClick
           slots={{
-            noRowsOverlay: NoLogsMessage, // Shows your message if list is empty
+            noRowsOverlay: NoLogsMessage,
           }}
         />
       </Box>

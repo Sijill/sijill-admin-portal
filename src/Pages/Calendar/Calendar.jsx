@@ -5,9 +5,7 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import { Paper, Stack, Typography, Box } from "@mui/material";
 import { formatDate } from "@fullcalendar/core";
-import Header from "../../Conponents/Header";
-
-// render event inside calendar
+import Header from "../../Components/Header";
 function renderEventContent(eventInfo) {
   return (
     <Box sx={{ fontSize: "12px", lineHeight: 1.2 }}>
@@ -16,8 +14,6 @@ function renderEventContent(eventInfo) {
     </Box>
   );
 }
-
-// render event in sidebar
 function renderSidebarEvent(event) {
   return (
     <li
@@ -81,7 +77,7 @@ const Calendar = () => {
           flexDirection: { xs: "column", md: "row" },
         }}
       >
-        {/* Sidebar */}
+        
         <Paper
           sx={{
             width: { xs: "100%", md: 260 },
@@ -114,7 +110,7 @@ const Calendar = () => {
           </ul>
         </Paper>
 
-        {/* Calendar */}
+        
         <Paper
           sx={{
             flex: 1,
@@ -126,8 +122,6 @@ const Calendar = () => {
             border: "1px solid var(--border-color)",
             marginLeft: { lg: "10px", md: "10px", xs: "0px", sm: "0px" },
             marginBottom: { xs: "10px", sm: "10px" },
-
-            // FullCalendar styles
             "& .fc-toolbar": {
               flexWrap: "wrap",
               gap: 10,

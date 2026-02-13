@@ -1,8 +1,12 @@
-import { Box, Paper, Stack, Typography } from "@mui/material";
-import Card from "../../../Conponents/Card";
-import { DataOne, DataTwo, DataThree, DataFour } from "./Data";
+import { Box } from "@mui/material";
+import Card from "../../../Components/Card";
 
-export default function RowOne() {
+export default function RowOne({ stats }) {
+  const patients = stats?.patients ?? 0;
+  const healthcareProviders = stats?.healthcareProviders ?? 0;
+  const laboratories = stats?.laboratories ?? 0;
+  const imagingCenters = stats?.imagingCenters ?? 0;
+
   return (
     <>
 
@@ -23,34 +27,34 @@ export default function RowOne() {
     >
 <Card
   icon={"bi bi-person-heart"}
-  count={"1230"}
+  count={patients}
   label={"Patients"}
-  colors={["#60a5fa", "#93c5fd", "#bfdbfe", "#a5b4fc"]} // أزرق Gradient
+  colors={["#60a5fa", "#93c5fd", "#bfdbfe", "#a5b4fc"]}
   bg={'var(--secondGrad)'}
 />
 
 <Card
   icon={"fas fa-stethoscope"}
-  count={"420"}
+  count={healthcareProviders}
   label={"Healthcare Providers"}
-  colors={["#4ade80", "#22d3ee", "#a7f3d0", "#86efac"]} // أخضر-أزرق Gradient
+  colors={["#4ade80", "#22d3ee", "#a7f3d0", "#86efac"]}
   bg={'var(--firstGrad)'}
 />
 
 
 <Card
   icon={"bi bi-droplet-half"}
-  count={"32"}
+  count={laboratories}
   label={"Laboratories"}
-  colors={["#f472b6", "#f9a8d4", "#fbcfe8", "#fda4af"]} // وردي Gradient
+  colors={["#f472b6", "#f9a8d4", "#fbcfe8", "#fda4af"]}
   bg={'var(--thirdGrad)'}
 />
 
 <Card
   icon={"bi bi-aspect-ratio"}
-  count={"27"}
+  count={imagingCenters}
   label={"Imaging Centers"}
-  colors={["#c084fc", "#ddd6fe", "#e9d5ff", "#d8b4fe"]} // بنفسجي Gradient
+  colors={["#c084fc", "#ddd6fe", "#e9d5ff", "#d8b4fe"]}
   bg={'var(--fourthGrad)'}
 />
 

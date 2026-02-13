@@ -5,7 +5,7 @@ import AccordionSummary from "@mui/material/AccordionSummary";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { GridExpandMoreIcon } from "@mui/x-data-grid";
-import Header from "../../Conponents/Header";
+import Header from "../../Components/Header";
 
 export default function Support() {
   return (

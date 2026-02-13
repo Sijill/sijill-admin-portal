@@ -1,11 +1,10 @@
 import React from 'react';
-// Added Stack and removed PersonRemoveIcon from the Avatar to match image exactly
 import { Box, Typography, Paper, TextField, InputAdornment, Chip, Button, Avatar, Stack } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import FlagIcon from '@mui/icons-material/Flag';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import PersonRemoveIcon from '@mui/icons-material/PersonRemove';
-import AccountCircleIcon from '@mui/icons-material/AccountCircle'; // Better for the profile circle
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 
 export default function SuspendedUsers() {
   const suspendedData = [
@@ -29,7 +28,7 @@ export default function SuspendedUsers() {
 
   return (
     <Box sx={{ p: 4, bgcolor: "#fcfcfc", minHeight: "100vh" }}>
-      {/* Header */}
+      
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
               <Avatar sx={{ bgcolor: '#edebeb00', width: 60, height: 60 }}>
                 <i className="bi bi-person-x" style={{ color: '#0c0202', fontSize: '1.8rem' }}></i>
@@ -39,7 +38,7 @@ export default function SuspendedUsers() {
         </Typography>
       </Box>
 
-      {/* Search Bar - Matching image_8f7852.png */}
+      
       <TextField
         fullWidth
         placeholder="Search Suspended Users"
@@ -61,7 +60,7 @@ export default function SuspendedUsers() {
         }}
       />
 
-      {/* User List */}
+      
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
         {suspendedData.map((user) => (
           <Paper
@@ -72,14 +71,14 @@ export default function SuspendedUsers() {
               borderRadius: '20px',
               border: '2px solid #eee',
               display: 'flex',
-              alignItems: 'center', // Changed to center for better alignment
+              alignItems: 'center',
               justifyContent: 'space-between',
               transition: '0.2s',
               '&:hover': { boxShadow: '0px 8px 24px rgba(0,0,0,0.06)' }
             }}
           >
             <Box sx={{ display: 'flex', gap: 2.5, alignItems: 'center' }}>
-              {/* User Avatar - Pinkish circle from image */}
+              
               <Avatar sx={{ bgcolor: '#ffebee', width: 60, height: 60 }}>
                 <i className="bi bi-person-x" style={{ color: '#ef5350', fontSize: '1.8rem' }}></i>
               </Avatar>
@@ -104,7 +103,7 @@ export default function SuspendedUsers() {
                   />
                 </Box>
 
-                {/* Details Section using the now-imported Stack */}
+                
                 <Stack spacing={0.4}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <FlagIcon sx={{ fontSize: 18 }} />
@@ -125,7 +124,7 @@ export default function SuspendedUsers() {
               </Box>
             </Box>
 
-            {/* Action Button - Blue from image */}
+            
             <Button
               variant="contained"
               sx={{

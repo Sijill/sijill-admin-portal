@@ -12,7 +12,7 @@ export default function Card({ icon, count, label, bg }) {
       }}
     >
       <Stack direction="row" spacing={2} alignItems="center">
-        {/* Icon */}
+        
         <Box
           sx={{
             width: 52,
@@ -28,7 +28,7 @@ export default function Card({ icon, count, label, bg }) {
           <i className={icon}></i>
         </Box>
 
-        {/* Text */}
+        
         <Box>
           <Typography
             sx={{

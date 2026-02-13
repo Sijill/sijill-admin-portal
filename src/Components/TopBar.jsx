@@ -1,11 +1,10 @@
-// hooks
 import { useContext, useState } from "react";
-// mui Componens
 import { Box, IconButton, Stack, Toolbar } from "@mui/material";
 import MuiAppBar from "@mui/material/AppBar";
 import { styled } from "@mui/material/styles";
-// context
+import { useNavigate } from "react-router-dom";
 import { Mode } from "../Context/ModeContextCreation";
+import { useAuth } from "../Context/useAuth";
 
 const drawerWidth = 240;
 
@@ -38,14 +37,12 @@ const Logo = styled(Box)(({ theme }) => ({
 
 export default function TopBar({ open, handleDrawerOpen }) {
   const { mode, setMode } = useContext(Mode);
-
-  // handle mode
+  const { auth, logout } = useAuth();
+  const navigate = useNavigate();
   const handleMode = () => {
     const newMood = mode === "light" ? "dark" : "light";
     (setMode(newMood), localStorage.setItem("colorMode", newMood));
   };
-
-  // handle full screen
   const [isFullScreen, setIsFullScreen] = useState(false);
 
   const handleFullScreen = () => {
@@ -57,6 +54,11 @@ export default function TopBar({ open, handleDrawerOpen }) {
       }
     }
     setIsFullScreen(!isFullScreen);
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/login", { replace: true });
   };
 
   return (
@@ -125,9 +127,13 @@ export default function TopBar({ open, handleDrawerOpen }) {
             <i className="bi bi-bell"></i>
           </IconButton>
 
-
-          <IconButton color="inherit" sx={{ width: "40px", height: "40px" }}>
-            <i className="bi bi-person"></i>
+          <IconButton
+            color="inherit"
+            sx={{ width: "40px", height: "40px" }}
+            onClick={handleLogout}
+            title={`Logout ${auth?.email || ""}`}
+          >
+            <i className="bi bi-box-arrow-right"></i>
           </IconButton>
 
           <IconButton

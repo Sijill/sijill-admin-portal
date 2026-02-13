@@ -1,7 +1,5 @@
 import { createTheme, CssBaseline, ThemeProvider } from "@mui/material";
-// state
 import { useEffect, useState } from "react";
-// context
 import { Mode } from "./ModeContextCreation";
 
 export default function ModeProvider({ children }) {

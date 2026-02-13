@@ -28,7 +28,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import Typography from "@mui/material/Typography";
 import { columns, rows } from "./ContactsData";
 import { Box } from "@mui/material";
-import Header from "../../Conponents/Header";
+import Header from "../../Components/Header";
 
 const StyledQuickFilter = styled(QuickFilter)({
   display: "grid",
@@ -129,10 +129,8 @@ function CustomToolbar() {
         >
           Download as CSV
         </ExportCsv>
-        {/* Available to MUI X Premium users */}
-        {/* <ExportExcel render={<MenuItem />}>
-           Download as Excel
-          </ExportExcel> */}
+        
+        
       </Menu>
 
       <StyledQuickFilter>
