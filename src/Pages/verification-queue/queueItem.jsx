@@ -1,9 +1,10 @@
 import React from 'react';
-import { Box, Paper, Typography, Button, Avatar, Stack } from '@mui/material';
+import { Box, Paper, Typography, Button, Avatar, Stack, Chip } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import FlagIcon from '@mui/icons-material/Flag';
 import EmailIcon from '@mui/icons-material/Email';
+import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded';
 
 export default function Queueitem({ id, email, role, date, icon, iconBg }) {
   const navigate = useNavigate();
@@ -30,19 +31,30 @@ export default function Queueitem({ id, email, role, date, icon, iconBg }) {
       elevation={0}
       sx={{
         p: 3,
-        borderRadius: '20px',
-        border: '2px solid #eee',
+        borderRadius: '16px',
+        border: '1px solid #e2e8f0',
         display: 'flex',
-        alignItems: 'center',
+        alignItems: { xs: 'stretch', md: 'center' },
         justifyContent: 'space-between',
-        transition: '0.2s',
-        '&:hover': { 
-          boxShadow: '0px 8px 24px rgba(0,0,0,0.06)',
-          borderColor: '#d0d0d0'
-        }
+        gap: 2,
+        transition: 'transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease',
+        position: 'relative',
+        overflow: 'hidden',
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          inset: '0 auto 0 0',
+          width: 4,
+          background: roleStyle.color,
+        },
+        '&:hover': {
+          transform: 'translateY(-2px)',
+          boxShadow: '0px 10px 26px rgba(15, 23, 42, 0.08)',
+          borderColor: '#cbd5e1',
+        },
       }}
     >
-      <Box sx={{ display: 'flex', gap: 2.5, alignItems: 'center' }}>
+      <Stack direction={{ xs: 'column', md: 'row' }} spacing={2.5} alignItems={{ xs: 'flex-start', md: 'center' }} sx={{ minWidth: 0, flex: 1 }}>
         
         <Avatar sx={{ bgcolor: iconBg, width: 60, height: 60 }}>
           <i 
@@ -54,38 +66,51 @@ export default function Queueitem({ id, email, role, date, icon, iconBg }) {
           ></i>
         </Avatar>
 
-        <Box>
+        <Box sx={{ minWidth: 0 }}>
           
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
+          <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" sx={{ mb: 1 }}>
             <EmailIcon sx={{ fontSize: 20, color: '#546e7a' }} />
-            <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '1.1rem' }}>
+            <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '1.05rem', wordBreak: 'break-word', minWidth: 0 }}>
               {email}
             </Typography>
-          </Box>
+          </Stack>
 
           
           <Stack spacing={0.4}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
               <FlagIcon sx={{ fontSize: 18, color: '#546e7a' }} />
               <Typography variant="body2" sx={{ fontWeight: 800, color: '#546e7a' }}>
-                Role: <span style={{ fontWeight: 500, color: roleStyle.color }}>{role}</span>
+                Role:
               </Typography>
-            </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Chip
+                label={role}
+                size="small"
+                sx={{
+                  fontWeight: 700,
+                  bgcolor: roleStyle.bg,
+                  color: roleStyle.color,
+                  border: `1px solid ${roleStyle.border}`,
+                }}
+              />
+            </Stack>
+            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
               <CalendarTodayIcon sx={{ fontSize: 18, color: '#546e7a' }} />
               <Typography variant="body2" sx={{ fontWeight: 800, color: '#546e7a' }}>
-                Submitted: <span style={{ fontWeight: 500 }}>{date}</span>
+                Submitted:
               </Typography>
-            </Box>
+              <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                {date}
+              </Typography>
+            </Stack>
           </Stack>
         </Box>
-      </Box>
+      </Stack>
 
       
       <Button
         onClick={() => navigate(`/patient-data/${id}`)}
         variant="contained"
-        endIcon={<i className="bi bi-arrow-right"></i>}
+        endIcon={<ArrowForwardRoundedIcon />}
         sx={{
           textTransform: 'none',
           borderRadius: '8px',
@@ -94,7 +119,9 @@ export default function Queueitem({ id, email, role, date, icon, iconBg }) {
           fontSize: '0.95rem',
           bgcolor: '#2563eb',
           '&:hover': { bgcolor: '#1d4ed8' },
-          boxShadow: 'none'
+          boxShadow: 'none',
+          alignSelf: { xs: 'stretch', md: 'center' },
+          minWidth: { xs: '100%', md: 140 },
         }}
       >
         Review

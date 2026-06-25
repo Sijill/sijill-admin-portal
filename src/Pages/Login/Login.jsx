@@ -49,6 +49,19 @@ export default function Login() {
 
   const expiryText = useMemo(() => formatExpiry(expiresAt), [expiresAt]);
 
+  const handleOtpChange = (event) => {
+    setOtp(event.target.value.replace(/\D/g, "").slice(0, 6));
+  };
+
+  const handleOtpPaste = (event) => {
+    event.preventDefault();
+    const pastedText = event.clipboardData.getData("text");
+    const normalizedOtp = pastedText.replace(/\D/g, "").slice(0, 6);
+    if (normalizedOtp) {
+      setOtp(normalizedOtp);
+    }
+  };
+
   if (isAuthenticated) {
     return <Navigate to="/" replace />;
   }
@@ -309,10 +322,12 @@ export default function Login() {
                 <TextField
                   label="Verification Code"
                   value={otp}
-                  onChange={(event) => setOtp(event.target.value.replace(/\D/g, "").slice(0, 6))}
+                  onChange={handleOtpChange}
+                  onPaste={handleOtpPaste}
                   inputProps={{ 
                     maxLength: 6, 
                     inputMode: "numeric",
+                    autoComplete: "one-time-code",
                     style: { 
                       textAlign: "center", 
                       fontSize: 24, 
@@ -356,8 +371,12 @@ export default function Login() {
                     }}
                   >
                     Code expires at: <strong>{expiryText}</strong>
-                  </Typography>
+                    </Typography>
                 ) : null}
+
+                <Typography variant="caption" color="text.secondary" textAlign="center">
+                  Paste the full 6-digit code or type it manually.
+                </Typography>
 
                 <Button
                   type="submit"

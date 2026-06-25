@@ -92,6 +92,11 @@ export default function SideBar({ open, handleDrawerClose }) {
       path: "/verification_queue",
     },
     {
+      text: "All Users",
+      icon: "bi bi-people",
+      path: "/users",
+    },
+    {
       text: "Suspended Users",
       icon: "bi bi-person-x",
       path: "/suspended-users",

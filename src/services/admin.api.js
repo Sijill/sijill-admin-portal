@@ -17,8 +17,11 @@ export const getVerificationQueueRequest = async (params = {}) => {
   const response = await apiClient.get('/api/v1/admin/verification-queue', {
     params,
   });
+  
   return response.data;
 };
+
+
 
 
 export const getVerificationDetailsRequest = async (userId) => {
