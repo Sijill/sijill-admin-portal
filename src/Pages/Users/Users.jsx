@@ -1,9 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Box,
   Button,
   Chip,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -22,101 +23,18 @@ import {
 } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import SearchIcon from '@mui/icons-material/Search';
-import PersonRemoveAlt1Icon from '@mui/icons-material/PersonRemoveAlt1';
-import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import BlockIcon from '@mui/icons-material/Block';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-import ReportProblemOutlinedIcon from '@mui/icons-material/ReportProblemOutlined';
 import ReplayIcon from '@mui/icons-material/Replay';
 import Header from '../../Components/Header';
 import { useAuth } from '../../Context/useAuth';
-
-const initialUsers = [
-  {
-    id: 'u-001',
-    name: 'Mohamed Ibrahim',
-    email: 'mohamed.ibrahim@adminportal.local',
-    role: 'ADMIN',
-    accountStatus: 'ACTIVE',
-    joinedAt: 'June 25, 2025',
-    lastActive: '2 min ago',
-    suspensionReason: '',
-  },
-  {
-    id: 'u-002',
-    name: 'John Doe',
-    email: 'john.doe@example.com',
-    role: 'PATIENT',
-    accountStatus: 'ACTIVE',
-    joinedAt: 'January 15, 2026',
-    lastActive: '8 min ago',
-    suspensionReason: '',
-  },
-  {
-    id: 'u-003',
-    name: 'Sarah Johnson',
-    email: 'sarah.johnson@example.com',
-    role: 'HEALTHCARE_PROVIDER',
-    accountStatus: 'ACTIVE',
-    joinedAt: 'January 12, 2026',
-    lastActive: '15 min ago',
-    suspensionReason: '',
-  },
-  {
-    id: 'u-004',
-    name: 'Precision Diagnostics Lab',
-    email: 'admin@precisionlab.com',
-    role: 'LAB',
-    accountStatus: 'SUSPENDED',
-    suspensionType: 'PERMANENT',
-    joinedAt: 'January 10, 2026',
-    lastActive: '1 hour ago',
-    suspensionReason: 'Pending accreditation renewal review',
-  },
-  {
-    id: 'u-005',
-    name: 'Advanced Imaging Center',
-    email: 'contact@advancedimaging.com',
-    role: 'IMAGING_CENTER',
-    accountStatus: 'ACTIVE',
-    joinedAt: 'January 08, 2026',
-    lastActive: '3 hours ago',
-    suspensionReason: '',
-  },
-  {
-    id: 'u-006',
-    name: 'Amina Khaled',
-    email: 'amina.khaled@example.com',
-    role: 'PATIENT',
-    accountStatus: 'SUSPENDED',
-    suspensionType: 'TEMPORARY',
-    joinedAt: 'December 22, 2025',
-    lastActive: '2 days ago',
-    suspensionReason: 'Repeated document upload failures',
-  },
-  {
-    id: 'u-007',
-    name: 'Dr. Robert Chen',
-    email: 'robert.chen@example.com',
-    role: 'HEALTHCARE_PROVIDER',
-    accountStatus: 'ACTIVE',
-    joinedAt: 'December 18, 2025',
-    lastActive: '5 hours ago',
-    suspensionReason: '',
-  },
-  {
-    id: 'u-008',
-    name: 'Dr. Maria Garcia',
-    email: 'maria.garcia@example.com',
-    role: 'IMAGING_CENTER',
-    accountStatus: 'PENDING',
-    joinedAt: 'December 15, 2025',
-    lastActive: '1 day ago',
-    suspensionReason: '',
-  },
-];
+import {
+  getUsersRequest,
+  getUsersMetaRequest,
+  suspendUserRequest,
+} from '../../services/admin.api';
 
 const roleLabels = {
   ADMIN: 'Admin',
@@ -167,6 +85,14 @@ const summaryCards = [
   },
 ];
 
+const statusMap = {
+  VERIFIED: 'ACTIVE',
+  SUSPENDED: 'SUSPENDED',
+  PENDING: 'PENDING',
+  REJECTED: 'PENDING',
+  DEACTIVATED: 'SUSPENDED',
+};
+
 const columns = [
   {
     field: 'name',
@@ -175,7 +101,7 @@ const columns = [
     minWidth: 220,
     renderCell: ({ row }) => (
       <Box sx={{ minWidth: 0 }}>
-        <Typography sx={{ fontWeight: 800, wordBreak: 'break-word' }}>{row.name}</Typography>
+        <Typography sx={{ fontWeight: 800, wordBreak: 'break-word' }}>{row.name || row.email}</Typography>
         <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
           {row.email}
         </Typography>
@@ -204,16 +130,17 @@ const columns = [
     },
   },
   {
-    field: 'accountStatus',
+    field: 'status',
     headerName: 'Status',
     flex: 0.8,
     minWidth: 140,
     renderCell: ({ value, row }) => {
-      const style = statusStyles[value] || statusStyles.ACTIVE;
+      const displayStatus = statusMap[value] || value;
+      const style = statusStyles[displayStatus] || statusStyles.ACTIVE;
       return (
         <Stack spacing={0.25}>
           <Chip
-            label={value}
+            label={displayStatus}
             size="small"
             sx={{
               fontWeight: 700,
@@ -222,9 +149,9 @@ const columns = [
               border: `1px solid ${style.border}`,
             }}
           />
-          {row.suspensionReason ? (
+          {row.suspension_reason ? (
             <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-              {row.suspensionReason}
+              {row.suspension_reason}
             </Typography>
           ) : null}
         </Stack>
@@ -232,16 +159,32 @@ const columns = [
     },
   },
   {
-    field: 'joinedAt',
+    field: 'joined_at',
     headerName: 'Joined',
     flex: 0.8,
     minWidth: 130,
+    valueGetter: (value) =>
+      value
+        ? new Date(value).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+          })
+        : '-',
   },
   {
-    field: 'lastActive',
+    field: 'last_active',
     headerName: 'Last active',
     flex: 0.8,
     minWidth: 130,
+    valueGetter: (value) =>
+      value
+        ? new Date(value).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+          })
+        : '-',
   },
 ];
 
@@ -270,45 +213,75 @@ export default function Users() {
   const { auth } = useAuth();
   const isAdmin = auth?.role === 'ADMIN';
 
-  const [users, setUsers] = useState(initialUsers);
+  const [users, setUsers] = useState([]);
+  const [meta, setMeta] = useState({ totalUsers: 0, suspendedUsers: 0 });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('ALL');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [suspendTarget, setSuspendTarget] = useState(null);
-  const [deleteTarget, setDeleteTarget] = useState(null);
-  const [suspensionMode, setSuspensionMode] = useState('TEMPORARY');
   const [suspensionReason, setSuspensionReason] = useState('');
+  const [suspending, setSuspending] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
+
+  const fetchUsers = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const params = {
+        limit: 100,
+        ...(roleFilter !== 'ALL' && { role: roleFilter }),
+        ...(statusFilter !== 'ALL' && { status: statusFilter }),
+      };
+
+      const [usersData, metaData] = await Promise.all([
+        getUsersRequest(params),
+        getUsersMetaRequest(),
+      ]);
+
+      setUsers(usersData.data || []);
+      setMeta(metaData);
+    } catch (err) {
+      console.error('Error fetching users:', err);
+      setError(err.response?.data?.message || 'Failed to load users');
+    } finally {
+      setLoading(false);
+    }
+  }, [roleFilter, statusFilter]);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
   const filteredUsers = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
-
+    if (!query) return users;
     return users.filter((user) => {
-      const matchesQuery =
-        query === '' ||
-        user.name.toLowerCase().includes(query) ||
+      const displayRole = roleLabels[user.role] || user.role;
+      return (
+        (user.name || '').toLowerCase().includes(query) ||
         user.email.toLowerCase().includes(query) ||
-        (roleLabels[user.role] || user.role).toLowerCase().includes(query);
-
-      const matchesRole = roleFilter === 'ALL' || user.role === roleFilter;
-      const matchesStatus = statusFilter === 'ALL' || user.accountStatus === statusFilter;
-
-      return matchesQuery && matchesRole && matchesStatus;
+        displayRole.toLowerCase().includes(query)
+      );
     });
-  }, [roleFilter, searchQuery, statusFilter, users]);
+  }, [searchQuery, users]);
 
   const stats = useMemo(() => {
-    return users.reduce(
-      (acc, user) => {
-        acc.total += 1;
-        if (user.accountStatus === 'ACTIVE') acc.active += 1;
-        if (user.accountStatus === 'SUSPENDED') acc.suspended += 1;
-        if (user.role === 'ADMIN') acc.admins += 1;
-        return acc;
-      },
-      { total: 0, active: 0, suspended: 0, admins: 0 }
-    );
-  }, [users]);
+    let active = 0;
+    let admins = 0;
+    users.forEach((user) => {
+      if (user.role === 'ADMIN') admins++;
+      if (user.status === 'VERIFIED') active++;
+    });
+    return {
+      total: meta.totalUsers,
+      active,
+      suspended: meta.suspendedUsers,
+      admins,
+    };
+  }, [users, meta]);
 
   const handleReset = () => {
     setSearchQuery('');
@@ -318,50 +291,29 @@ export default function Users() {
 
   const handleSuspendClick = (user) => {
     setSuspendTarget(user);
-    setSuspensionMode(user.suspensionType || 'TEMPORARY');
-    setSuspensionReason(user.suspensionReason || '');
+    setSuspensionReason('');
   };
 
-  const handleDeleteClick = (user) => {
-    setDeleteTarget(user);
-  };
-
-  const handleConfirmSuspend = () => {
-    if (!suspendTarget) {
-      return;
-    }
-
+  const handleConfirmSuspend = async () => {
+    if (!suspendTarget) return;
     const reason = suspensionReason.trim();
     if (reason.length < 10) {
       setSnackbarMessage('Enter a suspension reason with at least 10 characters.');
       return;
     }
-
-    setUsers((prev) =>
-      prev.map((user) =>
-        user.id === suspendTarget.id
-          ? {
-              ...user,
-              accountStatus: 'SUSPENDED',
-              suspensionType: suspensionMode,
-              suspensionReason: reason,
-            }
-          : user
-      )
-    );
-
-    setSnackbarMessage(`${suspendTarget.name} updated locally.`);
-    setSuspendTarget(null);
-  };
-
-  const handleConfirmDelete = () => {
-    if (!deleteTarget) {
-      return;
+    try {
+      setSuspending(true);
+      await suspendUserRequest(suspendTarget.id, { reason });
+      setSnackbarMessage(`${suspendTarget.name} has been suspended.`);
+      setSuspendTarget(null);
+      fetchUsers();
+    } catch (err) {
+      setSnackbarMessage(
+        err.response?.data?.message || 'Failed to suspend user'
+      );
+    } finally {
+      setSuspending(false);
     }
-
-    setUsers((prev) => prev.filter((user) => user.id !== deleteTarget.id));
-    setSnackbarMessage(`${deleteTarget.name} removed from the local directory.`);
-    setDeleteTarget(null);
   };
 
   const renderActions = (params) => {
@@ -374,22 +326,13 @@ export default function Users() {
           size="small"
           variant="outlined"
           startIcon={<BlockIcon />}
-          disabled={!isAdmin || isCurrentAdmin || row.accountStatus === 'SUSPENDED'}
+          disabled={
+            !isAdmin || isCurrentAdmin || row.status === 'SUSPENDED'
+          }
           onClick={() => handleSuspendClick(row)}
           sx={{ textTransform: 'none', fontWeight: 700, borderRadius: 2 }}
         >
           Suspend
-        </Button>
-        <Button
-          size="small"
-          variant="outlined"
-          color="error"
-          startIcon={<DeleteForeverIcon />}
-          disabled={!isAdmin || isCurrentAdmin}
-          onClick={() => handleDeleteClick(row)}
-          sx={{ textTransform: 'none', fontWeight: 700, borderRadius: 2 }}
-        >
-          Delete
         </Button>
       </Stack>
     );
@@ -423,7 +366,7 @@ export default function Users() {
       <Stack spacing={3}>
         <Header
           title="All Users"
-          description="Admin directory for browsing every account, filtering by role or status, and taking suspend or delete actions."
+          description="Admin directory for browsing every account, filtering by role or status, and managing user accounts."
         />
 
         <Grid container spacing={2}>
@@ -431,7 +374,15 @@ export default function Users() {
             <Grid key={card.label} size={{ xs: 12, sm: 6, lg: 3 }}>
               <SummaryCard
                 label={card.label}
-                value={card.label === 'Total users' ? stats.total : card.label === 'Active users' ? stats.active : card.label === 'Suspended users' ? stats.suspended : stats.admins}
+                value={
+                  card.label === 'Total users'
+                    ? stats.total
+                    : card.label === 'Active users'
+                      ? stats.active
+                      : card.label === 'Suspended users'
+                        ? stats.suspended
+                        : stats.admins
+                }
                 icon={card.icon}
                 color={card.color}
                 bg={card.bg}
@@ -489,7 +440,7 @@ export default function Users() {
                 sx={{ borderRadius: '12px', bgcolor: '#fff', height: '50px' }}
               >
                 <MenuItem value="ALL">All statuses</MenuItem>
-                <MenuItem value="ACTIVE">Active</MenuItem>
+                <MenuItem value="VERIFIED">Active</MenuItem>
                 <MenuItem value="SUSPENDED">Suspended</MenuItem>
                 <MenuItem value="PENDING">Pending</MenuItem>
               </Select>
@@ -505,6 +456,12 @@ export default function Users() {
             </Button>
           </Stack>
         </Paper>
+
+        {error && (
+          <Alert severity="error" sx={{ borderRadius: 2 }}>
+            {error}
+          </Alert>
+        )}
 
         <Paper
           variant="outlined"
@@ -531,39 +488,37 @@ export default function Users() {
             },
           }}
         >
-          <DataGrid
-            rows={filteredUsers}
-            columns={actionColumns}
-            disableRowSelectionOnClick
-            checkboxSelection
-          />
+          {loading && users.length === 0 ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+              <CircularProgress />
+            </Box>
+          ) : (
+            <DataGrid
+              rows={filteredUsers}
+              columns={actionColumns}
+              disableRowSelectionOnClick
+              checkboxSelection
+            />
+          )}
         </Paper>
       </Stack>
 
-      <Dialog open={Boolean(suspendTarget)} onClose={() => setSuspendTarget(null)} fullWidth maxWidth="sm">
+      <Dialog
+        open={Boolean(suspendTarget)}
+        onClose={() => setSuspendTarget(null)}
+        fullWidth
+        maxWidth="sm"
+      >
         <DialogTitle sx={{ fontWeight: 800 }}>Suspend user</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ pt: 1 }}>
-            <Alert severity="warning" icon={<ReportProblemOutlinedIcon />}>
-              Suspension is applied locally for now. This is ready to connect to backend actions later.
-            </Alert>
             <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-              {suspendTarget?.name} will be updated as soon as you confirm the action.
+              {suspendTarget?.name} will be suspended. This action can be
+              reversed later by reactivating the account.
             </Typography>
-            <FormControl fullWidth>
-              <InputLabel>Suspension mode</InputLabel>
-              <Select
-                value={suspensionMode}
-                label="Suspension mode"
-                onChange={(event) => setSuspensionMode(event.target.value)}
-              >
-                <MenuItem value="TEMPORARY">Temporary suspension</MenuItem>
-                <MenuItem value="PERMANENT">Permanent suspension</MenuItem>
-              </Select>
-            </FormControl>
             <TextField
               label="Reason"
-              placeholder="Write a clear suspension reason"
+              placeholder="Write a clear suspension reason (min 10 characters)"
               multiline
               minRows={4}
               value={suspensionReason}
@@ -572,13 +527,24 @@ export default function Users() {
           </Stack>
         </DialogContent>
         <DialogActions sx={{ p: 2.5 }}>
-          <Button onClick={() => setSuspendTarget(null)} sx={{ textTransform: 'none', fontWeight: 700 }}>
+          <Button
+            onClick={() => setSuspendTarget(null)}
+            disabled={suspending}
+            sx={{ textTransform: 'none', fontWeight: 700 }}
+          >
             Cancel
           </Button>
           <Button
             variant="contained"
             onClick={handleConfirmSuspend}
-            startIcon={<BlockIcon />}
+            disabled={suspending || suspensionReason.trim().length < 10}
+            startIcon={
+              suspending ? (
+                <CircularProgress size={16} sx={{ color: '#fff' }} />
+              ) : (
+                <BlockIcon />
+              )
+            }
             sx={{
               textTransform: 'none',
               fontWeight: 800,
@@ -588,35 +554,7 @@ export default function Users() {
               boxShadow: 'none',
             }}
           >
-            Confirm suspend
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      <Dialog open={Boolean(deleteTarget)} onClose={() => setDeleteTarget(null)} fullWidth maxWidth="sm">
-        <DialogTitle sx={{ fontWeight: 800 }}>Delete user</DialogTitle>
-        <DialogContent>
-          <Stack spacing={2} sx={{ pt: 1 }}>
-            <Alert severity="error" icon={<DeleteForeverIcon />}>
-              This removes the user from the local list immediately.
-            </Alert>
-            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-              {deleteTarget?.name} ({deleteTarget?.email}) will be deleted from the system view.
-            </Typography>
-          </Stack>
-        </DialogContent>
-        <DialogActions sx={{ p: 2.5 }}>
-          <Button onClick={() => setDeleteTarget(null)} sx={{ textTransform: 'none', fontWeight: 700 }}>
-            Cancel
-          </Button>
-          <Button
-            variant="contained"
-            color="error"
-            onClick={handleConfirmDelete}
-            startIcon={<DeleteForeverIcon />}
-            sx={{ textTransform: 'none', fontWeight: 800, borderRadius: 2, boxShadow: 'none' }}
-          >
-            Delete user
+            {suspending ? 'Suspending...' : 'Confirm suspend'}
           </Button>
         </DialogActions>
       </Dialog>

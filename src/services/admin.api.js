@@ -50,3 +50,40 @@ export const getDocumentRequest = async (documentId) => {
   );
   return response.data;
 };
+
+
+export const getUsersMetaRequest = async () => {
+  const response = await apiClient.get('/api/v1/admin/users/meta');
+  return response.data;
+};
+
+
+export const getUsersRequest = async (params = {}) => {
+  const response = await apiClient.get('/api/v1/admin/users', { params });
+  return response.data;
+};
+
+
+export const getSuspendedUsersRequest = async (params = {}) => {
+  const response = await apiClient.get('/api/v1/admin/users/suspended', {
+    params,
+  });
+  return response.data;
+};
+
+
+export const suspendUserRequest = async (userId, data) => {
+  const response = await apiClient.post(
+    `/api/v1/admin/users/${userId}/suspend`,
+    data
+  );
+  return response.data;
+};
+
+
+export const reactivateUserRequest = async (userId) => {
+  const response = await apiClient.post(
+    `/api/v1/admin/users/${userId}/reactivate`
+  );
+  return response.data;
+};

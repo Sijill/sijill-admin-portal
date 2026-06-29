@@ -1,10 +1,11 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Avatar,
   Box,
   Button,
   Chip,
+  CircularProgress,
   FormControl,
   Grid,
   Grow,
@@ -24,45 +25,17 @@ import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import PersonRemoveIcon from '@mui/icons-material/PersonRemove';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import RefreshRoundedIcon from '@mui/icons-material/RefreshRounded';
+import {
+  getSuspendedUsersRequest,
+  reactivateUserRequest,
+} from '../../services/admin.api';
 
-const initialSuspendedUsers = [
-  {
-    id: 1,
-    name: 'Robert Johnson',
-    email: 'robert.johnson@example.com',
-    status: 'Temporarily Suspended',
-    role: 'Patient',
-    date: 'January 18, 2026',
-    reason: 'Suspicious activity detected',
-  },
-  {
-    id: 2,
-    name: 'Mark Williams',
-    email: 'mark.williams@example.com',
-    status: 'Permanently Suspended',
-    role: 'Healthcare Provider',
-    date: 'January 18, 2026',
-    reason: 'License verification failed',
-  },
-  {
-    id: 3,
-    name: 'Precision Diagnostics Lab',
-    email: 'admin@precisionlab.com',
-    status: 'Temporarily Suspended',
-    role: 'Laboratory',
-    date: 'January 16, 2026',
-    reason: 'Missing renewal document',
-  },
-  {
-    id: 4,
-    name: 'Advanced Imaging Center',
-    email: 'contact@advancedimaging.com',
-    status: 'Temporarily Suspended',
-    role: 'Imaging Center',
-    date: 'January 14, 2026',
-    reason: 'Repeated policy violations',
-  },
-];
+const roleDisplayMap = {
+  PATIENT: 'Patient',
+  HEALTHCARE_PROVIDER: 'Healthcare Provider',
+  LAB: 'Laboratory',
+  IMAGING_CENTER: 'Imaging Center',
+};
 
 const summaryCards = [
   {
@@ -98,45 +71,94 @@ const roleStyles = {
 };
 
 export default function SuspendedUsers() {
-  const [users, setUsers] = useState(initialSuspendedUsers);
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [roleFilter, setRoleFilter] = useState('ALL');
+  const [reactivating, setReactivating] = useState(null);
   const [snackbarMessage, setSnackbarMessage] = useState('');
+
+  const fetchUsers = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await getSuspendedUsersRequest({ limit: 100 });
+      setUsers(response.data || []);
+    } catch (err) {
+      console.error('Error fetching suspended users:', err);
+      setError(
+        err.response?.data?.message || 'Failed to load suspended users'
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
+
+  const mappedUsers = useMemo(() => {
+    return users.map((user) => ({
+      id: user.id,
+      name: user.name || user.email,
+      email: user.email,
+      status: 'SUSPENDED',
+      role: roleDisplayMap[user.role] || user.role,
+      date: user.suspended_at
+        ? new Date(user.suspended_at).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          })
+        : '-',
+      reason: user.suspension_reason || 'No reason provided',
+    }));
+  }, [users]);
 
   const filteredUsers = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
 
-    return users.filter((user) => {
+    return mappedUsers.filter((user) => {
       const matchesQuery =
         query === '' ||
         user.name.toLowerCase().includes(query) ||
         user.email.toLowerCase().includes(query) ||
         user.reason.toLowerCase().includes(query);
 
-      const matchesStatus = statusFilter === 'ALL' || user.status === statusFilter;
-      const matchesRole = roleFilter === 'ALL' || user.role === roleFilter;
+      const matchesStatus =
+        statusFilter === 'ALL' || user.status === statusFilter;
+      const matchesRole =
+        roleFilter === 'ALL' || user.role === roleFilter;
 
       return matchesQuery && matchesStatus && matchesRole;
     });
-  }, [searchQuery, statusFilter, roleFilter, users]);
+  }, [searchQuery, statusFilter, roleFilter, mappedUsers]);
 
   const stats = useMemo(() => {
-    return users.reduce(
-      (acc, user) => {
-        acc.total += 1;
-        if (user.status === 'Temporarily Suspended') acc.temporary += 1;
-        if (user.status === 'Permanently Suspended') acc.permanent += 1;
-        return acc;
-      },
-      { total: 0, temporary: 0, permanent: 0 }
-    );
-  }, [users]);
+    return {
+      total: mappedUsers.length,
+      temporary: mappedUsers.length,
+      permanent: 0,
+    };
+  }, [mappedUsers]);
 
-  const handleReactivate = (id) => {
-    const removedUser = users.find((user) => user.id === id);
-    setUsers((prev) => prev.filter((user) => user.id !== id));
-    setSnackbarMessage(`${removedUser?.name || 'User'} has been reactivated locally.`);
+  const handleReactivate = async (id) => {
+    const user = users.find((u) => u.id === id);
+    try {
+      setReactivating(id);
+      await reactivateUserRequest(id);
+      setSnackbarMessage(`${user?.name || 'User'} has been reactivated.`);
+      fetchUsers();
+    } catch (err) {
+      setSnackbarMessage(
+        err.response?.data?.message || 'Failed to reactivate user'
+      );
+    } finally {
+      setReactivating(null);
+    }
   };
 
   const resetFilters = () => {
@@ -225,8 +247,7 @@ export default function SuspendedUsers() {
                 sx={{ borderRadius: '12px', bgcolor: '#fff', height: '50px' }}
               >
                 <MenuItem value="ALL">All statuses</MenuItem>
-                <MenuItem value="Temporarily Suspended">Temporarily Suspended</MenuItem>
-                <MenuItem value="Permanently Suspended">Permanently Suspended</MenuItem>
+                <MenuItem value="SUSPENDED">Suspended</MenuItem>
               </Select>
             </FormControl>
 
@@ -248,8 +269,18 @@ export default function SuspendedUsers() {
           </Stack>
         </Paper>
 
+        {error && (
+          <Alert severity="error" sx={{ borderRadius: 2 }}>
+            {error}
+          </Alert>
+        )}
+
         <Stack spacing={2}>
-          {filteredUsers.length === 0 ? (
+          {loading ? (
+            <Paper variant="outlined" sx={{ p: 6, textAlign: 'center', borderRadius: 3, bgcolor: '#fff' }}>
+              <CircularProgress />
+            </Paper>
+          ) : filteredUsers.length === 0 ? (
             <Paper variant="outlined" sx={{ p: 6, textAlign: 'center', borderRadius: 3, bgcolor: '#fff' }}>
               <Typography variant="h6" color="text.secondary">
                 No suspended users match the current filters.
@@ -257,7 +288,6 @@ export default function SuspendedUsers() {
             </Paper>
           ) : (
             filteredUsers.map((user, index) => {
-              const statusStyle = statusStyles[user.status];
               const roleStyle = roleStyles[user.role] || { bg: '#f3f4f6', text: '#374151', border: '#d1d5db' };
 
               return (
@@ -292,13 +322,13 @@ export default function SuspendedUsers() {
                             {user.name}
                           </Typography>
                           <Chip
-                            label={user.status}
+                            label="Suspended"
                             size="small"
                             sx={{
                               fontWeight: 700,
-                              bgcolor: statusStyle.bg,
-                              color: statusStyle.text,
-                              border: `1px solid ${statusStyle.border}`,
+                              bgcolor: statusStyles['Permanently Suspended'].bg,
+                              color: statusStyles['Permanently Suspended'].text,
+                              border: `1px solid ${statusStyles['Permanently Suspended'].border}`,
                             }}
                           />
                         </Stack>
@@ -346,6 +376,12 @@ export default function SuspendedUsers() {
                     <Button
                       variant="contained"
                       onClick={() => handleReactivate(user.id)}
+                      disabled={reactivating === user.id}
+                      startIcon={
+                        reactivating === user.id ? (
+                          <CircularProgress size={16} sx={{ color: '#fff' }} />
+                        ) : undefined
+                      }
                       sx={{
                         textTransform: 'none',
                         borderRadius: 2,
@@ -358,7 +394,9 @@ export default function SuspendedUsers() {
                         minWidth: { xs: '100%', md: 150 },
                       }}
                     >
-                      Reactivate
+                      {reactivating === user.id
+                        ? 'Reactivating...'
+                        : 'Reactivate'}
                     </Button>
                   </Paper>
                 </Grow>
