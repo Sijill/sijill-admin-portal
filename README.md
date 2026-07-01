@@ -259,7 +259,7 @@ This project is proprietary software. All rights reserved © Sijill Healthcare S
 
 **Built with ❤️ by the Sijill Engineering Team**
 
-📅 **Last Updated:** July 2026
+📅 **Last Updated:** 1 July 2026
 
 <br/>
 
